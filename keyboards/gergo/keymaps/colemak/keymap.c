@@ -20,6 +20,18 @@ enum custom_keycodes {
   M4_ALT_TAB
 };
 
+// Tap dances
+enum {
+  TD_TEST = 0
+};
+
+//Tap Dance Definitions
+qk_tap_dance_action_t tap_dance_actions[] = {
+  //Tap once for Esc, twice for Caps Lock
+  [TD_MOV_WIN]  = ACTION_TAP_DANCE_DOUBLE(S(C(KC_UP)), S(C(KC_DOWN)))
+// Other declarations would go here, separated by commas, if you have them
+};
+
 bool is_alt_tab_active = false;
 uint16_t alt_tab_timer = 0;
 
@@ -41,7 +53,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  *                                              ,-------.                      ,-------.
  *                                              | MMB   |                      |  :    |
  *                                       ,------|-------|                      |-------|------.
- *                                       | NUMB | SYMB  |                      | SYMB  | NUMB |
+ *                                       | SYMB |       |                      |       | NUMB |
  *                                       |  Esc |  F13  |                      | F14   | Enter|
  *                                       |      |       |                      |       |      |
  *                                       `--------------'                      `--------------'
@@ -53,8 +65,8 @@ KC_LSFT,              KC_Z,  KC_X,   KC_C,   KC_V, KC_B, OSM(MOD_LALT),       KC
 
                                      ALT_T(KC_DEL), KC_BSPC,                           KC_SPC, CMD_T(KC_DEL),
 
-                                                         KC_BTN3,       M4_ALT_TAB,
-                                LT(SYMB, KC_ESC), LT(NUMB, KC_F13),     LT(NUMB, KC_F14), LT(SYMB, KC_ENT)),
+                                                         TD(TD_MOV_WIN),       M4_ALT_TAB,
+                                       LT(SYMB, KC_ESC), KC_F13,                 KC_F14, LT(NUMB, KC_ENT)),
 /* Keymap 1: Symbols layer
  *
  * ,-------------------------------------------.                         ,-------------------------------------------.
