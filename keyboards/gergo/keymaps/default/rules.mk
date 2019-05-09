@@ -3,7 +3,8 @@
 # Make sure you have dfu-programmer installed!
 #----------------------------------------------------------------------------
 # Firmware options
-BALLER = yes 			# Enable to ball out
+BALLER = no 			# Enable to ball out
+JOYSTICK = no
 BALLSTEP = 20  			# Multiple in px to move, multiplied by layer number
 SCROLLSTEP = 1 			# Lines to scroll with ball
 MOUSEKEY_ENABLE = yes  		# Mouse keys(+4700), needed for baller
@@ -33,4 +34,7 @@ ifeq ($(strip $(DEBUG_BALLER)), yes)
 endif
 ifeq ($(strip $(DEBUG_MATRIX)), yes)
     OPT_DEFS += -DDEBUG_MATRIX
+endif
+ifeq ($(strip $(JOYSTICK)), yes)
+    OPT_DEFS += -DJOYSTICK
 endif

@@ -24,12 +24,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdint.h>
 #include <stdbool.h>
 #include <avr/io.h>
+#include "pincontrol.h"
 #include "wait.h"
 #include "action_layer.h"
 #include "print.h"
 #include "debug.h"
 #include "util.h"
 #include "pointing_device.h"
+#ifdef JOYSTICK
+# include "thumbstick.h"
+#endif //!JOYSTICK
 #include QMK_KEYBOARD_H
 #ifdef DEBUG_MATRIX_SCAN_RATE
 #include  "timer.h"
@@ -37,6 +41,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #ifdef BALLER
 #include <avr/interrupt.h>
+#endif
+
+#ifdef JOYSTICK
+#include "LUFA/Drivers/Peripheral/ADC.h"
 #endif
 
 #ifndef DEBOUNCE
@@ -162,9 +170,11 @@ uint8_t matrix_cols(void)
     return MATRIX_COLS;
 }
 
+uint32_t tamere = 0;
 
 void matrix_init(void)
 {
+  debug_enable=true;
     // initialize row and col
     mcp23018_status = init_mcp23018();
     unselect_rows();
@@ -178,6 +188,12 @@ void matrix_init(void)
             debounce_matrix[i * MATRIX_COLS + j] = 0;
         }
     }
+#ifdef JOYSTICK
+  // Turn on the ADC for reading the thumbstick
+  ADC_Init(ADC_SINGLE_CONVERSION | ADC_PRESCALE_32);
+  ADC_SetupChannel(11); // Y
+  ADC_SetupChannel(12); // X
+#endif
 
 #ifdef DEBUG_MATRIX_SCAN_RATE
     matrix_timer = timer_read32();
@@ -201,6 +217,7 @@ void matrix_power_up(void) {
     matrix_timer = timer_read32();
     matrix_scan_count = 0;
 #endif
+
 
 }
 
@@ -231,6 +248,123 @@ matrix_row_t debounce_read_cols(uint8_t row) {
   // debounce the row and return the result.
   return (cols & mask) | (matrix[row] & ~mask);;
 }
+
+#ifdef JOYSTICK
+#define STICK_MAX_X 820
+#define STICK_MAX_Y 850
+#define STICK_MIN_X 190
+#define STICK_MIN_Y 202
+#define STICK_CENTER_X 532
+#define STICK_CENTER_Y 553
+#define X_AXIS_DEADZONE 56
+#define Y_AXIS_DEADZONE 41
+
+static thumbstick_mode_t thumbstickMode = MOVE;
+
+void thumbstickChangeMode() {
+
+  if (thumbstickMode == MOVE)
+    thumbstickMode = SCROLL;
+  else
+    thumbstickMode = MOVE;
+
+  // Clear state to avoid getting stuck if the mode is changed
+  // while the stick is not centered
+  report_mouse_t newReport = {0, 0, 0, 0 };
+  pointing_device_set_report(newReport);
+}
+
+// Map a value from [in_min..in_max] to another value in the range of [out_min..out_max]
+int32_t map(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
+  return out_min + (x - in_min) * (out_max - out_min) / (in_max - in_min);
+}
+
+static int16_t thumbstick_read(uint32_t chanmask, uint16_t high, uint16_t low, uint16_t center, uint8_t deadzone)
+{
+  uint16_t analogValue = ADC_GetChannelReading(ADC_REFERENCE_AVCC | chanmask);
+
+  if (thumbstickMode == SCROLL) deadzone *= 2;
+
+  // If the current value is too clone to the deadzone, do not move the mouse.
+  if (abs((int)analogValue - center) <= deadzone)
+    return 0;
+
+  // We dont want scrolling to be fine. It leads to crazy 2-axis scrolling at the same time.
+  // Only register it if the thumbstick moved significantly
+  if (thumbstickMode == SCROLL)
+  {
+      return analogValue > center ? 1 : -1; // We only need +/- 1 because we're using QMK's mouse wheel emulation.
+  }
+
+  // Map the analog read value from 0 to 1024 to between -127 and 127 so that it can be fed to
+  // mouseReport.
+  // But in reality we never reach 0 and 1024 because the joystick is not that precise, so just
+  // map from the empiric range. (Note that these values as specific to your thumbstick, if you want finer control
+  // you need to adjust the defines to fit your readings).
+  int32_t vMapped = map(
+      (int)analogValue,
+      low,
+      high,
+      -127,
+      127);
+
+  return vMapped * 1/8;
+}
+
+static int32_t thumbstick_read_x(void)
+{
+  return thumbstick_read(ADC_CHANNEL11, STICK_MAX_X, STICK_MIN_X, STICK_CENTER_X, X_AXIS_DEADZONE);
+}
+
+static int32_t thumbstick_read_y(void)
+{
+  return thumbstick_read(ADC_CHANNEL12, STICK_MAX_Y, STICK_MIN_Y, STICK_CENTER_Y, Y_AXIS_DEADZONE);
+}
+
+void process_thumbstick(void)
+{
+  int8_t x = thumbstick_read_x();
+  int8_t y = thumbstick_read_y();
+
+  if (x || y) {
+
+    if (thumbstickMode == MOVE)
+    {
+      report_mouse_t currentReport = pointing_device_get_report();
+      currentReport.x = -x; // mounted left-side right
+      currentReport.y = y;
+      currentReport.v = 0;
+      currentReport.h = 0;
+      pointing_device_set_report(currentReport);
+    }
+    else
+    {
+      if (y > 0) // Up
+      {
+        register_code(KC_WH_U);
+        unregister_code(KC_WH_U);
+      }
+      else // Down
+      {
+        register_code(KC_WH_D);
+        unregister_code(KC_WH_D);
+      }
+
+      if (x > 0)
+      {
+        register_code(KC_WH_R);
+        unregister_code(KC_WH_R);
+      }
+      else
+      {
+        register_code(KC_WH_L);
+        unregister_code(KC_WH_L);
+      }
+
+    }
+  }
+}
+#endif // !JOYSTICK
 
 uint8_t matrix_scan(void)
 {
@@ -321,6 +455,9 @@ uint8_t matrix_scan(void)
         unselect_rows();
     }
 
+#ifdef JOYSTICK
+    process_thumbstick();
+#endif // !JOYSTICK
     matrix_scan_quantum();
     enableInterrupts();
 
