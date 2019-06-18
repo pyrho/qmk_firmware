@@ -79,7 +79,7 @@ KC_LSFT,              KC_Z,  KC_X,   KC_C,   KC_V, KC_B, OSM(MOD_LALT),       KC
                                      TD(TD_ALT_CMD), KC_BSPC,                           KC_SPC, TD(TD_CMD_ALT),
 
                                                          TD(TD_MOV_WIN),       M5_TOGGLE_MOUSE_MODE,
-                                       LT(SYMB, KC_ESC), KC_F13,                 KC_F14, LT(NUMB, KC_ENT)),
+                                       LT(SYMB, KC_ESC), KC_F13,                 LM(NUMB, MOD_LGUI), LT(NUMB, KC_ENT)),
 /* Keymap 1: Symbols layer
  *
  * ,-------------------------------------------.                         ,-------------------------------------------.
