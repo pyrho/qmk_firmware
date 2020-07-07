@@ -49,9 +49,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  *                                 `--------------'                      `--------------'
  */
 [BASE] = LAYOUT_gergo(
-    MY_HYP1,      KC_Q,  KC_W,   KC_F,   KC_P, KC_G,                                                                  KC_J,    KC_L, KC_U,    KC_Y,   KC_SCLN,    MY_HYP2,
-    KC_LCTL,      KC_A,  KC_R,   KC_S,   KC_T, KC_D, OSM(MOD_LGUI),                                   OSM(MOD_LCTL),  KC_H,    KC_N, KC_E,    KC_I,   KC_O,       MY_HYP3,
-    KC_LSPO,      KC_Z,  KC_X,   KC_C,   KC_V, KC_B, OSM(MOD_LALT),     KC_PGUP,         KC_PGDN,     OSM(M_GC),      KC_K,    KC_M, KC_COMM, KC_DOT, KC_SLSH,    KC_RSPC,
+    MY_HYP1,      KC_Q,  KC_W,   KC_F,   KC_P, KC_G,                                                                  KC_J,    KC_L, KC_U,    KC_Y,   KC_SCLN,    KC_BSLASH,
+    KC_LCTL,      KC_A,  KC_R,   KC_S,   KC_T, KC_D, OSM(MOD_LGUI),                                   OSM(MOD_LCTL),  KC_H,    KC_N, KC_E,    KC_I,   KC_O,       KC_QUOT,
+    KC_LSFT,      KC_Z,  KC_X,   KC_C,   KC_V, KC_B, OSM(MOD_LALT),     MY_HYP3,         MY_HYP2,     OSM(M_GC),      KC_K,    KC_M, KC_COMM, KC_DOT, KC_SLSH,    KC_RSFT,
 
                          KC_LALT, KC_BSPC, LT(SYMB, KC_ESC), KC_LEAD,                              LM(NUMB, MOD_LGUI), LT(NUMB, KC_ENT), KC_SPC, KC_RGUI
     ),
