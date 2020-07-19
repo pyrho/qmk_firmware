@@ -1,6 +1,7 @@
 #pragma once
 
 #define PERMISSIVE_HOLD
+
 #define TAPPING_TERM 130
 
 // Leader key setup (https://beta.docs.qmk.fm/using-qmk/advanced-keycodes/feature_leader_key)
